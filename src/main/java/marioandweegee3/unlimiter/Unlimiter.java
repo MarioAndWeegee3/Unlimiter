@@ -22,7 +22,6 @@ import org.apache.logging.log4j.Logger;
 import marioandweegee3.unlimiter.config.ConfigEntry;
 import marioandweegee3.unlimiter.util.ConfigClampedAttribute;
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.event.server.ServerStartCallback;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.entity.attribute.ClampedEntityAttribute;
 
@@ -85,33 +84,29 @@ public class Unlimiter implements ModInitializer {
         for (ConfigEntry entry : configuredAttributes.values()) {
             entry.log(s -> log(s));
         }
-                    log("Found the following config entries:");
-                    for (ConfigEntry entry : configuredAttributes.values()) {
-                        entry.log(s -> log(s));
+        for (Object a : attributes) {
+            if (a instanceof ClampedEntityAttribute) {
+                if (a instanceof ConfigClampedAttribute) {
+                    ClampedEntityAttribute attribute = (ClampedEntityAttribute) a;
+                    ConfigClampedAttribute attributeConfig = (ConfigClampedAttribute) a;
+                    if (configuredAttributes.containsKey(attribute.getId())) {
+                        log("Config loaded for " + attribute.getId());
+                        ConfigEntry entry = configuredAttributes.get(attribute.getId());
+                        attributeConfig.setMax(entry.max);
+                        attributeConfig.setMin(entry.min);
+                    } else if (configuredAttributes.containsKey(attribute.getName())) {
+                        log("Config loaded for " + attribute.getName());
+                        ConfigEntry entry = configuredAttributes.get(attribute.getName());
+                        attributeConfig.setMax(entry.max);
+                        attributeConfig.setMin(entry.min);
+                    } else {
+                        log("Using default for " + attribute.getId());
+                        attributeConfig.setMax(Double.MAX_VALUE);
+                        attributeConfig.setMin(-Double.MAX_VALUE);
                     }
-                    for (Object a : attributes) {
-                        if (a instanceof ClampedEntityAttribute) {
-                            if (a instanceof ConfigClampedAttribute) {
-                                ClampedEntityAttribute attribute = (ClampedEntityAttribute) a;
-                                ConfigClampedAttribute attributeConfig = (ConfigClampedAttribute) a;
-                                if (configuredAttributes.containsKey(attribute.getId())) {
-                                    log("Config loaded for " + attribute.getId());
-                                    ConfigEntry entry = configuredAttributes.get(attribute.getId());
-                                    attributeConfig.setMax(entry.max);
-                                    attributeConfig.setMin(entry.min);
-                                } else if (configuredAttributes.containsKey(attribute.getName())) {
-                                    log("Config loaded for " + attribute.getName());
-                                    ConfigEntry entry = configuredAttributes.get(attribute.getName());
-                                    attributeConfig.setMax(entry.max);
-                                    attributeConfig.setMin(entry.min);
-                                } else {
-                                    log("Using default for " + attribute.getId());
-                                    attributeConfig.setMax(Double.MAX_VALUE);
-                                    attributeConfig.setMin(-Double.MAX_VALUE);
-                                }
-                            }
-                        }
-                    }
+                }
+            }
+        }
     }
 
     public static void log(CharSequence message){
